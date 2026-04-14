@@ -1,239 +1,153 @@
 import { useEffect, useState } from "react";
 
+const API = "https://backend-nmky.onrender.com";
+
 function App() {
   const [file, setFile] = useState<File | null>(null);
   const [files, setFiles] = useState<string[]>([]);
   const [search, setSearch] = useState("");
 
+  // GET FILES
   const fetchFiles = async () => {
-    const res = await fetch("https://backend-nmky.onrender.com");
-    const data = await res.json();
-    setFiles(data);
+    try {
+      const res = await fetch(`${API}/files`);
+      const data = await res.json();
+      setFiles(data);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    }
   };
 
   useEffect(() => {
     fetchFiles();
   }, []);
 
- const uploadFile = async () => {
-  if (!file) {
-    alert("Pumili ka muna ng file");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  try {
-    const res = await fetch("https://backend-nmky.onrender.com/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await res.json();
-    console.log("Response:", data);
-
-    if (!res.ok) {
-      throw new Error("Upload failed");
+  // UPLOAD FILE
+  const uploadFile = async () => {
+    if (!file) {
+      alert("Pumili ka muna ng file");
+      return;
     }
 
-    alert("Upload success!");
-    setFile(null);
-    fetchFiles();
-  } catch (err) {
-    console.error(err);
-    alert("May error sa upload!");
-  }
-};
+    const formData = new FormData();
+    formData.append("file", file);
 
-  const deleteFile = async (name: string) => {
-    await fetch(`http://localhost:5000/delete/${name}`, {
-      method: "DELETE",
-    });
+    try {
+      const res = await fetch(`${API}/upload`, {
+        method: "POST",
+        body: formData,
+      });
 
-    fetchFiles();
+      const data = await res.json();
+      console.log(data);
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      alert("Upload success!");
+      setFile(null);
+      fetchFiles();
+    } catch (err) {
+      console.error(err);
+      alert("May error sa upload!");
+    }
   };
 
+  // DELETE FILE
+  const deleteFile = async (name: string) => {
+    try {
+      await fetch(`${API}/delete/${name}`, {
+        method: "DELETE",
+      });
+
+      fetchFiles();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // SEARCH FILTER
   const filteredFiles = files.filter((f) =>
     f.toLowerCase().includes(search.toLowerCase())
   );
+
+  // ICONS
   const getFileIcon = (name: string) => {
-    const ext = name.split('.').pop()?.toLowerCase() || '';
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(ext)) return '🖼️';
-    if (ext === 'pdf') return '📄';
-    if (['txt', 'md', 'csv', 'json', 'xml', 'log'].includes(ext)) return '📝';
-    if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)) return '🎬';
-    if (['mp3', 'wav', 'ogg', 'flac', 'm4a'].includes(ext)) return '🎵';
-    return '📁';
+    const ext = name.split(".").pop()?.toLowerCase() || "";
+
+    if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "🖼️";
+    if (ext === "pdf") return "📄";
+    if (["txt", "json", "csv", "md"].includes(ext)) return "📝";
+    if (["mp4", "mov", "avi"].includes(ext)) return "🎬";
+    if (["mp3", "wav"].includes(ext)) return "🎵";
+    return "📁";
   };
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
       {/* SIDEBAR */}
-      <div
-        style={{
-          width: "230px",
-          background: "#f1f3f4",
-          padding: "20px",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <h2 style={{ marginBottom: "20px" }}>📁 Drive</h2>
-        <div
-          style={{
-            padding: "10px",
-            borderRadius: "8px",
-            background: "#e8f0fe",
-            marginBottom: "10px",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
+      <div style={{ width: 230, background: "#f1f3f4", padding: 20 }}>
+        <h2>📁 Drive</h2>
+        <div style={{ padding: 10, background: "#e8f0fe", borderRadius: 8 }}>
           My Files
         </div>
       </div>
 
       {/* MAIN */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          background: "#f8f9fa",
-        }}
-      >
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {/* HEADER */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "15px 20px",
-            borderBottom: "1px solid #ddd",
-            background: "#fff",
-            position: "sticky",
-            top: 0,
-            zIndex: 10,
-          }}
-        >
+        <div style={{ padding: 15, borderBottom: "1px solid #ddd" }}>
           <h2>My Files</h2>
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-            <input
-              type="text"
-              placeholder="Search files..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                padding: "6px 10px",
-                borderRadius: "20px",
-                border: "1px solid #ccc",
-                outline: "none",
-              }}
-            />
-            <input
-              type="file"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
-            <button
-              onClick={uploadFile}
-              style={{
-                padding: "6px 15px",
-                background: "#1a73e8",
-                color: "#fff",
-                border: "none",
-                borderRadius: "20px",
-                cursor: "pointer",
-              }}
-            >
-              Upload
-            </button>
-          </div>
+
+          <input
+            placeholder="Search files..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ marginRight: 10 }}
+          />
+
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
+
+          <button onClick={uploadFile}>Upload</button>
         </div>
 
-        {/* FILE GRID */}
+        {/* GRID */}
         <div
           style={{
-            padding: "20px",
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-            gap: "15px",
+            gap: 10,
+            padding: 20,
             overflowY: "auto",
-            maxHeight: "calc(100vh - 80px)", // keeps it compact, adjust if needed
           }}
         >
           {filteredFiles.map((name, i) => (
             <div
               key={i}
               style={{
-                background: "#fff",
-                borderRadius: "12px",
-                padding: "10px",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                transition: "0.2s",
-                cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.transform = "scale(1.05)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.transform = "scale(1)";
+                padding: 10,
+                border: "1px solid #ddd",
+                borderRadius: 10,
+                textAlign: "center",
               }}
             >
-              <div style={{ fontSize: "40px", textAlign: "center" }}>{getFileIcon(name)}</div>
+              <div style={{ fontSize: 40 }}>{getFileIcon(name)}</div>
 
-              <div
-                style={{
-                  marginTop: "10px",
-                  fontWeight: "bold",
-                  fontSize: "14px",
-                  textAlign: "center",
-                  wordBreak: "break-word",
-                }}
+              <div style={{ fontWeight: "bold" }}>{name}</div>
+
+              {/* VIEW */}
+              <a
+                href={`${API}/uploads/${name}`}
+                target="_blank"
+                rel="noreferrer"
               >
-                {name}
-              </div>
+                View
+              </a>
 
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: "5px",
-                  marginTop: "10px",
-                }}
-              >
-                <a
-                  href={`http://localhost:5000/uploads/${name}`}
-                  target="_blank"
-                  style={{
-                    background: "#1a73e8",
-                    color: "#fff",
-                    padding: "5px 8px",
-                    borderRadius: "5px",
-                    fontSize: "12px",
-                    textDecoration: "none",
-                  }}
-                >
-                  View
-                </a>
-
-                <button
-                  onClick={() => deleteFile(name)}
-                  style={{
-                    background: "#ea4335",
-                    color: "#fff",
-                    border: "none",
-                    padding: "5px 8px",
-                    borderRadius: "5px",
-                    fontSize: "12px",
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
+              {/* DELETE */}
+              <button onClick={() => deleteFile(name)}>Delete</button>
             </div>
           ))}
         </div>
