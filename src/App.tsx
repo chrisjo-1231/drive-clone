@@ -6,7 +6,7 @@ function App() {
   const [search, setSearch] = useState("");
 
   const fetchFiles = async () => {
-    const res = await fetch("http://localhost:5000/files");
+    const res = await fetch("https://backend-nmky.onrender.com");
     const data = await res.json();
     setFiles(data);
   };
@@ -25,7 +25,7 @@ function App() {
   formData.append("file", file);
 
   try {
-    const res = await fetch("http://localhost:5000/upload", {
+    const res = await fetch("https://backend-nmky.onrender.com/upload", {
       method: "POST",
       body: formData,
     });
